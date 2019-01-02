@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReleaseNotes>Package for logging and exceptions</PackageReleaseNotes>
+    <Description>Package for logging and exceptions</Description>
+    <Company>ESFA</Company>
+    <Authors>ESFA</Authors>
+    <!--<TargetFramework>netcoreapp2.1</TargetFramework>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Azure.Documents.Client">
+      <HintPath>..\packages\Microsoft.Azure.DocumentDB.2.2.0\lib\net461\Microsoft.Azure.Documents.Client.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -8,3 +8,6 @@
 /DFC.Common.Framework/bin/Debug
 *.user
 /DFC.Common.Framework/bin
+/DFC.Common.Core/bin/Release/netstandard2.0
+/DFC.Common.Core/obj
+/DFC.Common.Core/bin/Release
