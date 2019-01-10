@@ -7,10 +7,10 @@ using Newtonsoft.Json;
 
 namespace DFC.Common.Standard.Logging
 {
-    public static class LoggerExtensions
+    public class LoggerHelper : ILoggerHelper
     {
         
-        public static void LogHttpResponseMessage(this ILogger logger, Guid correlationId, string message, HttpResponseMessage httpResponseMessage)
+        public void LogHttpResponseMessage(ILogger logger, Guid correlationId, string message, HttpResponseMessage httpResponseMessage)
         {
             CheckLoggerIsNotNull(logger);
 
@@ -19,7 +19,7 @@ namespace DFC.Common.Standard.Logging
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
-                logger.LogInformationObject(correlationId, message, httpResponseMessage);
+                LogInformationObject(logger,correlationId, message, httpResponseMessage);
             }
             else
             {
@@ -27,31 +27,31 @@ namespace DFC.Common.Standard.Logging
             }
         }
 
-        public static void LogInformationMessage(this ILogger logger, Guid correlationId, string message)
+        public void LogInformationMessage(ILogger logger, Guid correlationId, string message)
         {
             CheckLoggerIsNotNull(logger);
 
             logger.LogInformation(string.Format("CorrelationId: {0} Message: {1} ", correlationId, message));
         }
 
-        public static void LogWarningMessage(this ILogger logger, Guid correlationId, string message)
+        public void LogWarningMessage(ILogger logger, Guid correlationId, string message)
         {
             CheckLoggerIsNotNull(logger);
 
             logger.LogWarning(string.Format("CorrelationId: {0} Message: {1} ", correlationId, message));
         }
 
-        public static void LogError(this ILogger logger, Guid correlationId, Exception exception)
+        public void LogError(ILogger logger, Guid correlationId, Exception exception)
         {
             CheckLoggerIsNotNull(logger);
 
             if (exception == null)
                 throw new ArgumentNullException(nameof(exception));
 
-            logger.LogError(correlationId, string.Empty, exception);
+            LogError(logger, correlationId, string.Empty, exception);
         }
 
-        public static void LogError(this ILogger logger, Guid correlationId, string message, Exception exception)
+        public void LogError(ILogger logger, Guid correlationId, string message, Exception exception)
         {
             CheckLoggerIsNotNull(logger);
 
@@ -61,17 +61,17 @@ namespace DFC.Common.Standard.Logging
             logger.LogError("CorrelationId: {0}  Message: {1} Error: {2}", correlationId, message, exception);
         }
 
-        public static void LogException(this ILogger logger, Guid correlationId, Exception exception)
+        public void LogException(ILogger logger, Guid correlationId, Exception exception)
         {
             CheckLoggerIsNotNull(logger);
 
             if (exception == null)
                 throw new ArgumentNullException(nameof(exception));
 
-            logger.LogException(correlationId, string.Empty, exception);
+            LogException(logger, correlationId, string.Empty, exception);
         }
 
-        public static void LogException(this ILogger logger, Guid correlationId, string message, Exception exception)
+        public void LogException(ILogger logger, Guid correlationId, string message, Exception exception)
         {
             CheckLoggerIsNotNull(logger);
 
@@ -81,7 +81,7 @@ namespace DFC.Common.Standard.Logging
             logger.LogError("CorrelationId: {0}  Message: {1} Exception: {2}", correlationId, message, exception);
         }
 
-        public static void LogInformationObject(this ILogger logger, Guid correlationId, string message, object obj)
+        public void LogInformationObject(ILogger logger, Guid correlationId, string message, object obj)
         {
             CheckLoggerIsNotNull(logger);
 
@@ -89,7 +89,7 @@ namespace DFC.Common.Standard.Logging
 
             if (obj is string)
             {
-                var maxLength = 4096; // This may change but it is a best guess for now.
+                var maxLength = 4096; //  may change but it is a best guess for now.
                 json = ((string)obj)?.Substring(0, Math.Min(((string)obj).Length, maxLength));
             }
             else
@@ -100,17 +100,17 @@ namespace DFC.Common.Standard.Logging
             logger.LogInformation("CorrelationId: {0}  Message: {1} Object: {2}", correlationId, message, json);
         }
 
-        public static void LogCosmosQueryRequestCharge(this ILogger logger, Guid correlationId, string message, double requestCharge)
+        public void LogCosmosQueryRequestCharge(ILogger logger, Guid correlationId, string message, double requestCharge)
         {
             logger.LogInformation("CorrelationId: {0}  Message: {1} Request Charge: {2}", correlationId, message, requestCharge);
         }
 
-        public static void LogCosmosQueryMetricsObject(this ILogger logger, Guid correlationId, string message, QueryMetrics cosmosQueryMetrics)
+        public void LogCosmosQueryMetricsObject(ILogger logger, Guid correlationId, string message, QueryMetrics cosmosQueryMetrics)
         {
             logger.LogInformation("CorrelationId: {0}  Message: {1} Object: {2}", correlationId, message, JsonConvert.SerializeObject(cosmosQueryMetrics));
         }
         
-        public static void LogCosmosQueryMetrics(this ILogger logger, Guid correlationId, string message, QueryMetrics cosmosQueryMetrics)
+        public void LogCosmosQueryMetrics(ILogger logger, Guid correlationId, string message, QueryMetrics cosmosQueryMetrics)
         {
             logger.LogInformation("CorrelationId: {0}\n" +
                                   "Message: {1}\n" +
@@ -128,27 +128,27 @@ namespace DFC.Common.Standard.Logging
                 cosmosQueryMetrics.TotalTime);
         }
 
-        public static void LogMethodEnter(this ILogger logger)
+        public void LogMethodEnter(ILogger logger)
         {
             CheckLoggerIsNotNull(logger);
 
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                var method = new StackFrame(1).GetMethod();
+               var method = new StackFrame(1).GetMethod();
                 logger.LogDebug("Entering method. {0}", method?.DeclaringType?.ToString());
             }
         }
 
-        public static void LogMethodExit(this ILogger logger)
+        public void LogMethodExit(ILogger logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                var method = new StackFrame(1).GetMethod();
+               var method = new StackFrame(1).GetMethod();
                 logger.LogDebug("Exiting method. {0}", method?.DeclaringType?.ToString());
             }
         }
 
-        private static void CheckLoggerIsNotNull(ILogger logger)
+        private void CheckLoggerIsNotNull(ILogger logger)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
