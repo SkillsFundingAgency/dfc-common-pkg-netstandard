@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DFC.Common.Core
+namespace DFC.Common.Standard
 {
     public static class Throw
     {

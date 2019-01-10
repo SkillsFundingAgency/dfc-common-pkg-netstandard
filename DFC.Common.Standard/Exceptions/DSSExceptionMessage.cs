@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DFC.Common.Core.Exceptions
+namespace DFC.Common.Standard.Exceptions
 {
     public class DssExceptionMessage
     {

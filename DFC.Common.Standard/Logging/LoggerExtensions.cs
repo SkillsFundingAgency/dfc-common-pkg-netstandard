@@ -5,7 +5,7 @@ using System.Net.Http;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 
-namespace DFC.Common.Core.Logging
+namespace DFC.Common.Standard.Logging
 {
     public static class LoggerExtensions
     {
