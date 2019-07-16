@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DFC.Common.Standard
+namespace DFC.Common.Standard.Exceptions
 {
     public interface IThrow
     {

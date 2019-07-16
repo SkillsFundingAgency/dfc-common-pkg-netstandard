@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DFC.Common.Standard
+namespace DFC.Common.Standard.Exceptions
 {
     public class Throw : IThrow
     {
