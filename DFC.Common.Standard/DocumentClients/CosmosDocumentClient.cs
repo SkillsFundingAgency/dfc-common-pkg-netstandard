@@ -2,7 +2,7 @@
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
-namespace NCS.DSS.ActionPlan.Cosmos.Client
+namespace DFC.Common.Standard.CosmosDocumentClient
 {
     public class CosmosDocumentClient : ICosmosDocumentClient
     {
