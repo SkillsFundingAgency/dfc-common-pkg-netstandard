@@ -8,11 +8,9 @@ namespace DFC.Common.Standard.CosmosDocumentClient
     public class CosmosDocumentClient : ICosmosDocumentClient
     {
         private readonly IDocumentClient _documentClient;
-        private readonly ILogger _logger;
 
-        public CosmosDocumentClient(ILogger logger)
+        public CosmosDocumentClient()
         {
-            _logger = logger;
             _documentClient = CreateDocumentClient();  
         }
 
