@@ -33,8 +33,7 @@ namespace DFC.Common.Standard.CosmosDocumentClient
             }
             catch (ArgumentNullException ex )
             { 
-                _logger.LogInformation(ex, "'CosmosDBConnectionString' was not found in Environment variable or connection string value is not correctly formatted.");
-                throw;
+                throw ex;
             }            
         }
 
