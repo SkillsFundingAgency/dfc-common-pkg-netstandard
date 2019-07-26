@@ -6,12 +6,22 @@ namespace DFC.Common.Standard.GuidHelper
     {
         public bool IsValidGuid(string id)
         {
+            if (string.IsNullOrEmpty(id?.Trim()))
+            {
+                return false;
+            }
+
             return Guid.TryParse(id, out _);
         }
 
-        public Guid ValidateGuid(string id)
+        public Guid ValidateAndGetGuid(string id)
         {
-            return Guid.TryParse(id, out var validGuid) ? validGuid : Guid.Empty;
+            if (string.IsNullOrEmpty(id?.Trim()))
+            {
+                return Guid.NewGuid();
+            }
+
+            return Guid.TryParse(id, out var validGuid) ? validGuid : Guid.NewGuid();
         }
 
         public Guid GenerateGuid()

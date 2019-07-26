@@ -1,46 +1,41 @@
 ﻿using System;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Extensions.Logging;
 
 namespace DFC.Common.Standard.CosmosDocumentClient
 {
     public class CosmosDocumentClient : ICosmosDocumentClient
     {
         private readonly IDocumentClient _documentClient;
+        private readonly ILogger _logger;
 
-        public CosmosDocumentClient()
+        public CosmosDocumentClient(ILogger logger)
         {
-            _documentClient = CreateDocumentClient();
+            _logger = logger;
+            _documentClient = CreateDocumentClient();  
         }
 
         private IDocumentClient CreateDocumentClient()
         {
-            var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnectionString");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
+            try
             {
-                throw new ArgumentNullException();
+                var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnectionString");
+                var endPoint = connectionString.Split(new[] { "AccountEndpoint=" }, StringSplitOptions.None)[1]
+                    .Split(';')[0]
+                    .Trim();
+
+                var key = connectionString.Split(new[] { "AccountKey=" }, StringSplitOptions.None)[1]
+                    .Split(';')[0]
+                    .Trim();
+
+                return new DocumentClient(new Uri(endPoint), key);
             }
-
-            var endPoint = connectionString.Split(new[] { "AccountEndpoint=" }, StringSplitOptions.None)[1]
-                .Split(';')[0]
-                .Trim();
-
-            if (string.IsNullOrWhiteSpace(endPoint))
-            {
-                throw new ArgumentNullException();
-            }
-
-            var key = connectionString.Split(new[] { "AccountKey=" }, StringSplitOptions.None)[1]
-                .Split(';')[0]
-                .Trim();
-
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentNullException();
-            }
-
-            return new DocumentClient(new Uri(endPoint), key);
+            catch (ArgumentNullException ex )
+            { 
+                _logger.LogInformation(ex, "'CosmosDBConnectionString' was not found in Environment variable or connection string value is not correctly formatted.");
+                throw;
+            }            
         }
 
         public IDocumentClient GetDocumentClient()
