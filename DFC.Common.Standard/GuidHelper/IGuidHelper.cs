@@ -7,9 +7,8 @@ namespace DFC.Common.Standard.GuidHelper
 
         bool IsValidGuid(string id);
 
-        Guid ValidateGuid(string id);
+        Guid ValidateAndGetGuid(string id);
 
         Guid GenerateGuid();
-
     }
 }

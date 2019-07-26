@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Extensions.Logging;
 
 namespace DFC.Common.Standard.CosmosDocumentClient
 {
@@ -10,37 +11,28 @@ namespace DFC.Common.Standard.CosmosDocumentClient
 
         public CosmosDocumentClient()
         {
-            _documentClient = CreateDocumentClient();
+            _documentClient = CreateDocumentClient();  
         }
 
         private IDocumentClient CreateDocumentClient()
         {
-            var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnectionString");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
+            try
             {
-                throw new ArgumentNullException();
+                var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnectionString");
+                var endPoint = connectionString.Split(new[] { "AccountEndpoint=" }, StringSplitOptions.None)[1]
+                    .Split(';')[0]
+                    .Trim();
+
+                var key = connectionString.Split(new[] { "AccountKey=" }, StringSplitOptions.None)[1]
+                    .Split(';')[0]
+                    .Trim();
+
+                return new DocumentClient(new Uri(endPoint), key);
             }
-
-            var endPoint = connectionString.Split(new[] { "AccountEndpoint=" }, StringSplitOptions.None)[1]
-                .Split(';')[0]
-                .Trim();
-
-            if (string.IsNullOrWhiteSpace(endPoint))
-            {
-                throw new ArgumentNullException();
-            }
-
-            var key = connectionString.Split(new[] { "AccountKey=" }, StringSplitOptions.None)[1]
-                .Split(';')[0]
-                .Trim();
-
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentNullException();
-            }
-
-            return new DocumentClient(new Uri(endPoint), key);
+            catch (ArgumentNullException ex )
+            { 
+                throw ex;
+            }            
         }
 
         public IDocumentClient GetDocumentClient()
