@@ -10,14 +10,16 @@ using Newtonsoft.Json.Linq;
 
 namespace NCS.DSS.CosmosDocumentClient
 {
-    public class CosmosProvider<T> where T : class, ICosmosProvider<T>
+    public class CosmosProvider<T> where T : class
     {      
-        private readonly IDocumentClient _documentClient;
+        private readonly IDocumentClient _documentClient; 
         private readonly Uri _customerDocumentCollectionUri;
         private readonly string _databaseId;
         private readonly string _collectionId;
         private readonly string _customerDatabaseId;
         private readonly string _customerCollectionId;
+
+        private Uri _documentCollectionUri;
 
         public CosmosProvider(IDocumentClient documentClient)
         {
@@ -86,7 +88,7 @@ namespace NCS.DSS.CosmosDocumentClient
 
         public async Task<T> GetChildResourceForCustomerAsync(Guid customerId, Guid childResourceId)
         {
-            var collectionUri = CreateDocumentCollectionUri();
+            var collectionUri = GetOrCreateDocumentCollectionUri();
             
             var employmentProgressionForCustomerQuery = _documentClient
                 ?.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 })
@@ -105,7 +107,7 @@ namespace NCS.DSS.CosmosDocumentClient
 
         public async Task<List<T>> GetChildResourceForCustomerAsync(Guid customerId)
         {
-            var collectionUri = CreateDocumentCollectionUri();
+            var collectionUri = GetOrCreateDocumentCollectionUri();
 
             var childrenResourcesQuery = _documentClient.CreateDocumentQuery<T>(collectionUri)
                 .Where(so => so.CustomerId == customerId).AsDocumentQuery();
@@ -123,7 +125,7 @@ namespace NCS.DSS.CosmosDocumentClient
 
         public async Task<ResourceResponse<Document>> CreateChildResourceAsync(T childResource)
         {
-            var collectionUri = CreateDocumentCollectionUri();
+            var collectionUri = GetOrCreateDocumentCollectionUri();
             
             var response = await _documentClient.CreateDocumentAsync(collectionUri, childResource);
 
@@ -150,23 +152,39 @@ namespace NCS.DSS.CosmosDocumentClient
             return response;
         }
 
+        private Uri CreateDocumentUri(Guid contactDetailsId)
+        {
+            return UriFactory.CreateDocumentUri(_databaseId, _collectionId, contactDetailsId.ToString());
+        }
+
         public async Task<string> GetChildResourceForCustomerToPatchAsync(Guid customerId, Guid childResourceId)
         {
-            var collectionUri = CreateDocumentCollectionUri();
+            var collectionUri = GetOrCreateDocumentCollectionUri();
             
 
-            var employmentProgressionQuery = _documentClient
+            var childResourceQuery = _documentClient
                 ?.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 })
                     .Where(x => x.CustomerId == customerId && x.EmploymentProgressionId == childResourceId)
                     .AsDocumentQuery();
 
-            if (employmentProgressionQuery == null)
+            if (childResourceQuery == null)
             {
                 return null;
             }
 
-            var employmentProgressions = await employmentProgressionQuery.ExecuteNextAsync();
-            return employmentProgressions?.FirstOrDefault()?.ToString();
+            var childResource = await childResourceQuery.ExecuteNextAsync();
+            return childResource?.FirstOrDefault()?.ToString();
+        }
+
+        private Uri GetOrCreateDocumentCollectionUri()
+        {
+            if (_documentCollectionUri != null)
+            {
+                return _documentCollectionUri;
+            }
+
+            _documentCollectionUri = UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId);
+            return _documentCollectionUri;
         }
     }
 }
