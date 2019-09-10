@@ -5,14 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
-using NCS.DSS.CosmosDocumentClient.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace NCS.DSS.CosmosDocumentClient
 {
     public class CosmosProvider<T> where T : class
-    {      
-        private readonly IDocumentClient _documentClient; 
+    {
+        private readonly IDocumentClient _documentClient;
         private readonly Uri _customerDocumentCollectionUri;
         private readonly string _databaseId;
         private readonly string _collectionId;
@@ -33,11 +32,10 @@ namespace NCS.DSS.CosmosDocumentClient
 
         public async Task<bool> DoesCustomerResourceExist(Guid customerId)
         {
-            var documentUri = DocumentDBUrlHelper.CreateCustomerDocumentUri(customerId);
+            var documentUri = CreateCustomerDocumentUri(customerId);
 
             try
             {
-                
                 var response = await _documentClient.ReadDocumentAsync(documentUri);
                 if (response.Resource != null)
                 {
@@ -52,13 +50,17 @@ namespace NCS.DSS.CosmosDocumentClient
             return false;
         }
 
+        public Uri CreateCustomerDocumentUri(Guid customerId)
+        {
+            return UriFactory.CreateDocumentUri(_customerDatabaseId, _customerCollectionId, customerId.ToString());
+        }
+
         public async Task<bool> DoesCustomerHaveTerminationDate(Guid customerId)
         {
-            var documentUri = DocumentDBUrlHelper.CreateCustomerDocumentUri(customerId);
+            var documentUri = CreateCustomerDocumentUri(customerId);
 
             try
             {
-                
                 var response = await _documentClient.ReadDocumentAsync(documentUri);
                 var dateOfTermination = response.Resource?.GetPropertyValue<DateTime?>("DateOfTermination");
 
@@ -70,29 +72,36 @@ namespace NCS.DSS.CosmosDocumentClient
             }
         }
 
-        public bool DoesChildResourceExistForCustomer(Guid customerId)
+        public bool DoesChildResourceExistForCustomer(Guid customerId, string customerPropertyName)
         {
-            var collectionUri = DocumentDBUrlHelper.CreateDocumentCollectionUri();
-            
-
-            if (_documentClient == null)
-            {
-                return false;
-            }
+            var collectionUri = CreateDocumentCollectionUri();
 
             var employmentProgressionForCustomerQuery = _documentClient.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 });
-            var result = employmentProgressionForCustomerQuery.Where(x => x.CustomerId == customerId).AsEnumerable().Any();
+            var result = employmentProgressionForCustomerQuery.Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerPropertyName)).GetValue(nameof(customerPropertyName)).ToString()) == customerId).AsEnumerable().Any();
 
             return result;
         }
 
-        public async Task<T> GetChildResourceForCustomerAsync(Guid customerId, Guid childResourceId)
+        public Uri CreateDocumentCollectionUri()
+        {
+            if (_documentCollectionUri != null)
+            {
+                return _documentCollectionUri;
+            }
+
+            _documentCollectionUri = UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId);
+            return _documentCollectionUri;
+        }
+
+        public async Task<T> GetChildResourceForCustomerAsync(Guid customerId, Guid childResourceId, string customerPropertyName, string childResourcePropertyName)
         {
             var collectionUri = GetOrCreateDocumentCollectionUri();
-            
+
             var employmentProgressionForCustomerQuery = _documentClient
                 ?.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 })
-                .Where(x => x.CustomerId == customerId && x.EmploymentProgressionId == childResourceId)
+                .Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerPropertyName)).GetValue(nameof(customerId)).ToString()) == customerId &&
+                    Guid.Parse(x.GetType().GetProperty(nameof(childResourcePropertyName)).GetValue(nameof(childResourcePropertyName)).ToString()) == childResourceId)
+
                 .AsDocumentQuery();
 
             if (employmentProgressionForCustomerQuery == null)
@@ -110,7 +119,7 @@ namespace NCS.DSS.CosmosDocumentClient
             var collectionUri = GetOrCreateDocumentCollectionUri();
 
             var childrenResourcesQuery = _documentClient.CreateDocumentQuery<T>(collectionUri)
-                .Where(so => so.CustomerId == customerId).AsDocumentQuery();
+                .Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerId)).GetValue(nameof(customerId)).ToString()) == customerId).AsDocumentQuery();
 
             var employmentProgressions = new List<T>();
 
@@ -157,14 +166,14 @@ namespace NCS.DSS.CosmosDocumentClient
             return UriFactory.CreateDocumentUri(_databaseId, _collectionId, contactDetailsId.ToString());
         }
 
-        public async Task<string> GetChildResourceForCustomerToPatchAsync(Guid customerId, Guid childResourceId)
+        public async Task<string> GetChildResourceForCustomerToPatchAsync(Guid customerId, Guid childResourceId, string customerPropertyName, string childResourcePropertyName)
         {
             var collectionUri = GetOrCreateDocumentCollectionUri();
-            
 
             var childResourceQuery = _documentClient
                 ?.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 })
-                    .Where(x => x.CustomerId == customerId && x.EmploymentProgressionId == childResourceId)
+                    .Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerPropertyName)).GetValue(nameof(customerId)).ToString()) == customerId &&
+                    Guid.Parse(x.GetType().GetProperty(nameof(childResourcePropertyName)).GetValue(nameof(customerId)).ToString()) == childResourceId)
                     .AsDocumentQuery();
 
             if (childResourceQuery == null)

@@ -13,9 +13,9 @@ namespace NCS.DSS.CosmosDocumentClient.Tests
         public void Test1()
         {
             // arrange
-            var t = new CosmosProvider<EmploymentProgression>(new DocumentClient(new Uri("http://google.com"),""));
+            //var t = new CosmosProvider<EmploymentProgression>(new DocumentClient(new Uri("http://google.com"),""));
 
-            t.
+            //t.
             // act
 
 
