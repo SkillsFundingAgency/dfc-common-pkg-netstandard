@@ -1,0 +1,4 @@
+C:\ESFA\dfc-common-pkg-netstandard\dfc-common-pkg-netstandard-tests\obj\Debug\netcoreapp2.2\dfc-common-pkg-netstandard-tests.csprojAssemblyReference.cache
+C:\ESFA\dfc-common-pkg-netstandard\dfc-common-pkg-netstandard-tests\obj\Debug\netcoreapp2.2\dfc-common-pkg-netstandard-tests.csproj.CoreCompileInputs.cache
+C:\ESFA\dfc-common-pkg-netstandard\dfc-common-pkg-netstandard-tests\obj\Debug\netcoreapp2.2\dfc-common-pkg-netstandard-tests.AssemblyInfoInputs.cache
+C:\ESFA\dfc-common-pkg-netstandard\dfc-common-pkg-netstandard-tests\obj\Debug\netcoreapp2.2\dfc-common-pkg-netstandard-tests.AssemblyInfo.cs
