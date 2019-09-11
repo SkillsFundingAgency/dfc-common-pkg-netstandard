@@ -2,35 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DFC.Common.Standard.CosmoClient.Models;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 using Newtonsoft.Json.Linq;
 
 namespace NCS.DSS.CosmosDocumentClient
 {
-    public class CosmosProvider<T> where T : class
+    public class CosmosProvider<T> where T : class, new()
     {
         private readonly IDocumentClient _documentClient;
-        private readonly Uri _customerDocumentCollectionUri;
-        private readonly string _databaseId;
-        private readonly string _collectionId;
-        private readonly string _customerDatabaseId;
-        private readonly string _customerCollectionId;
-
+        private readonly CosmosProviderConfiguration _cosmosProviderConfiguration;
         private Uri _documentCollectionUri;
 
-        public CosmosProvider(IDocumentClient documentClient)
+        public CosmosProvider(IDocumentClient documentClient, CosmosProviderConfiguration cosmosProviderConfiguration)
         {
             _documentClient = documentClient;
-
-            _databaseId = Environment.GetEnvironmentVariable("DatabaseId");
-            _collectionId = Environment.GetEnvironmentVariable("CollectionId");
-            _customerDatabaseId = Environment.GetEnvironmentVariable("CustomerDatabaseId");
-            _customerCollectionId = Environment.GetEnvironmentVariable("CustomerCollectionId");
+            _cosmosProviderConfiguration = cosmosProviderConfiguration;
         }
 
-        public async Task<bool> DoesCustomerResourceExist(Guid customerId)
+        public async Task<bool> DoesCustomerResourceExistAsync(Guid customerId)
         {
             var documentUri = CreateCustomerDocumentUri(customerId);
 
@@ -52,7 +43,7 @@ namespace NCS.DSS.CosmosDocumentClient
 
         public Uri CreateCustomerDocumentUri(Guid customerId)
         {
-            return UriFactory.CreateDocumentUri(_customerDatabaseId, _customerCollectionId, customerId.ToString());
+            return UriFactory.CreateDocumentUri(_cosmosProviderConfiguration.CustomerDatabaseId, _cosmosProviderConfiguration.CustomerCollectionId, customerId.ToString());
         }
 
         public async Task<bool> DoesCustomerHaveTerminationDate(Guid customerId)
@@ -89,53 +80,63 @@ namespace NCS.DSS.CosmosDocumentClient
                 return _documentCollectionUri;
             }
 
-            _documentCollectionUri = UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId);
+            _documentCollectionUri = UriFactory.CreateDocumentCollectionUri(_cosmosProviderConfiguration.DatabaseId, _cosmosProviderConfiguration.CollectionId);
             return _documentCollectionUri;
         }
 
-        public async Task<T> GetChildResourceForCustomerAsync(Guid customerId, Guid childResourceId, string customerPropertyName, string childResourcePropertyName)
+        public T GetChildResourceForCustomer(Guid customerId, Guid childResourceId)
         {
             var collectionUri = GetOrCreateDocumentCollectionUri();
 
-            var employmentProgressionForCustomerQuery = _documentClient
-                ?.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 })
-                .Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerPropertyName)).GetValue(nameof(customerId)).ToString()) == customerId &&
-                    Guid.Parse(x.GetType().GetProperty(nameof(childResourcePropertyName)).GetValue(nameof(childResourcePropertyName)).ToString()) == childResourceId)
-
-                .AsDocumentQuery();
-
-            if (employmentProgressionForCustomerQuery == null)
+            var query = _documentClient.CreateDocumentQuery<T>(collectionUri, new SqlQuerySpec()
             {
-                return null;
-            }
+                QueryText = $"SELECT * FROM {_cosmosProviderConfiguration.CollectionId} f " +
+                    $"WHERE (f.{_cosmosProviderConfiguration.CustomerResourceIdName} = @customerId AND " +
+                    $"f.{_cosmosProviderConfiguration.ChildResourceIdName} = @ChildResourceId)",
 
-            var childResource = await employmentProgressionForCustomerQuery.ExecuteNextAsync<T>();
+                Parameters = new SqlParameterCollection()
+                    {
+                        new SqlParameter("@customerId", customerId.ToString()),
+                        new SqlParameter("@ChildResourceId", childResourceId.ToString())
+                    }
+            });
 
-            return childResource?.FirstOrDefault();
+            return query.ToList().FirstOrDefault();
         }
 
-        public async Task<List<T>> GetChildResourceForCustomerAsync(Guid customerId)
+        public string GetChildResourceToPatchForCustomer(Guid customerId, Guid childResourceId)
+        {
+            var childResource = GetChildResourceForCustomer(customerId, childResourceId);
+
+            if (childResource == null)
+            {
+                return string.Empty;
+            }
+
+            return childResource.ToString();
+        }
+
+        public List<T> GetChildrenResourceForCustomer(Guid customerId)
         {
             var collectionUri = GetOrCreateDocumentCollectionUri();
 
-            var childrenResourcesQuery = _documentClient.CreateDocumentQuery<T>(collectionUri)
-                .Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerId)).GetValue(nameof(customerId)).ToString()) == customerId).AsDocumentQuery();
-
-            var employmentProgressions = new List<T>();
-
-            while (childrenResourcesQuery.HasMoreResults)
+            var query = _documentClient.CreateDocumentQuery<T>(collectionUri, new SqlQuerySpec()
             {
-                var response = await childrenResourcesQuery.ExecuteNextAsync<T>();
-                employmentProgressions.AddRange(response);
-            }
+                QueryText = $"SELECT * FROM {_cosmosProviderConfiguration.CollectionId} f WHERE (f.{_cosmosProviderConfiguration.CustomerResourceIdName} = @customerId)",
 
-            return employmentProgressions.Any() ? employmentProgressions : null;
+                Parameters = new SqlParameterCollection()
+                    {
+                        new SqlParameter("@customerId", customerId.ToString())
+                    }
+            });
+
+            return query.ToList();
         }
 
         public async Task<ResourceResponse<Document>> CreateChildResourceAsync(T childResource)
         {
             var collectionUri = GetOrCreateDocumentCollectionUri();
-            
+
             var response = await _documentClient.CreateDocumentAsync(collectionUri, childResource);
 
             return response;
@@ -163,26 +164,7 @@ namespace NCS.DSS.CosmosDocumentClient
 
         private Uri CreateDocumentUri(Guid contactDetailsId)
         {
-            return UriFactory.CreateDocumentUri(_databaseId, _collectionId, contactDetailsId.ToString());
-        }
-
-        public async Task<string> GetChildResourceForCustomerToPatchAsync(Guid customerId, Guid childResourceId, string customerPropertyName, string childResourcePropertyName)
-        {
-            var collectionUri = GetOrCreateDocumentCollectionUri();
-
-            var childResourceQuery = _documentClient
-                ?.CreateDocumentQuery<T>(collectionUri, new FeedOptions { MaxItemCount = 1 })
-                    .Where(x => Guid.Parse(x.GetType().GetProperty(nameof(customerPropertyName)).GetValue(nameof(customerId)).ToString()) == customerId &&
-                    Guid.Parse(x.GetType().GetProperty(nameof(childResourcePropertyName)).GetValue(nameof(customerId)).ToString()) == childResourceId)
-                    .AsDocumentQuery();
-
-            if (childResourceQuery == null)
-            {
-                return null;
-            }
-
-            var childResource = await childResourceQuery.ExecuteNextAsync();
-            return childResource?.FirstOrDefault()?.ToString();
+            return UriFactory.CreateDocumentUri(_cosmosProviderConfiguration.DatabaseId, _cosmosProviderConfiguration.CollectionId, contactDetailsId.ToString());
         }
 
         private Uri GetOrCreateDocumentCollectionUri()
@@ -192,7 +174,7 @@ namespace NCS.DSS.CosmosDocumentClient
                 return _documentCollectionUri;
             }
 
-            _documentCollectionUri = UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId);
+            _documentCollectionUri = UriFactory.CreateDocumentCollectionUri(_cosmosProviderConfiguration.DatabaseId, _cosmosProviderConfiguration.CollectionId);
             return _documentCollectionUri;
         }
     }
