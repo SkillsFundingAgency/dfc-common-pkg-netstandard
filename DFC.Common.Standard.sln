@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFC.Common.Standard", "DFC.Common.Standard\DFC.Common.Standard.csproj", "{F03AD2F2-7EAC-469F-A2FB-8F3F5171D90A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dfc-common-pkg-netstandard-tests", "dfc-common-pkg-netstandard-tests\dfc-common-pkg-netstandard-tests.csproj", "{8B8B6DD3-1D72-441F-8CF8-C768A6C9E174}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{F03AD2F2-7EAC-469F-A2FB-8F3F5171D90A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F03AD2F2-7EAC-469F-A2FB-8F3F5171D90A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F03AD2F2-7EAC-469F-A2FB-8F3F5171D90A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8B8B6DD3-1D72-441F-8CF8-C768A6C9E174}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8B8B6DD3-1D72-441F-8CF8-C768A6C9E174}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8B8B6DD3-1D72-441F-8CF8-C768A6C9E174}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8B8B6DD3-1D72-441F-8CF8-C768A6C9E174}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

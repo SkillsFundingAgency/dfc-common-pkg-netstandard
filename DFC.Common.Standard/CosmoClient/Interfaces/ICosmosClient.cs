@@ -5,7 +5,7 @@ using Microsoft.Azure.Documents.Client;
 
 namespace NCS.DSS.CosmosDocumentClient.Interfaces
 {
-    public interface ICosmosProvider<T> where T : class, new()
+    public interface ICosmosClient<T> where T : class, new()
     {
         Task<ResourceResponse<Document>> CreateResourceAsync(T resource);
         T GetResource(SqlQuerySpec sqlQuerySpec);  

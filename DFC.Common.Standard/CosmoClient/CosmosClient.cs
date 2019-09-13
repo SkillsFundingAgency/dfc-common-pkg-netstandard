@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DFC.Common.Standard.CosmoClient.Models;
+using DFC.Common.Standard.CosmosClient.Models;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using NCS.DSS.CosmosDocumentClient.Interfaces;
@@ -10,16 +10,16 @@ using Newtonsoft.Json.Linq;
 
 namespace NCS.DSS.CosmosDocumentClient
 {
-    public class CosmosProvider<T> :ICosmosProvider<T> where T : class, new()
+    public class CosmosClient<T> :ICosmosClient<T> where T : class, new()
     {
         private readonly IDocumentClient _documentClient;
-        private readonly CosmosProviderConfiguration _cosmosProviderConfiguration;
+        private readonly CosmosClientConfiguration _cosmosProviderConfiguration;
         private readonly Uri _collectionUri;
 
-        public CosmosProvider(IDocumentClient documentClient, CosmosProviderConfiguration cosmosProviderConfiguration)
+        public CosmosClient(IDocumentClient documentClient, CosmosClientConfiguration cosmosClientConfiguration)
         {
             _documentClient = documentClient;
-            _cosmosProviderConfiguration = cosmosProviderConfiguration;
+            _cosmosProviderConfiguration = cosmosClientConfiguration;
 
             _collectionUri = CreateCollectionUri();
         }
@@ -31,14 +31,14 @@ namespace NCS.DSS.CosmosDocumentClient
 
         public T GetResource(SqlQuerySpec sqlQuerySpec)
         {
-            var query = _documentClient.CreateDocumentQuery<T>(_collectionUri, sqlQuerySpec);
+            var query = _documentClient.CreateDocumentQuery<T>(_collectionUri, sqlQuerySpec, new FeedOptions { MaxItemCount = 1 });
 
             return query.ToList().FirstOrDefault();
         }
 
         public List<T> GetResources(SqlQuerySpec sqlQuerySpec)
         {
-            var query = _documentClient.CreateDocumentQuery<T>(_collectionUri, sqlQuerySpec);
+            var query = _documentClient.CreateDocumentQuery<T>(_collectionUri, sqlQuerySpec, new FeedOptions { MaxItemCount = 1 });
 
             return query.ToList();
         }

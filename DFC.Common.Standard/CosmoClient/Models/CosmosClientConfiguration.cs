@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DFC.Common.Standard.CosmoClient.Models
+﻿namespace DFC.Common.Standard.CosmosClient.Models
 {
-    public class CosmosProviderConfiguration
+    public class CosmosClientConfiguration
     {
         public string DatabaseId { get; set; }
         public string CollectionId { get; set; }
@@ -14,6 +10,5 @@ namespace DFC.Common.Standard.CosmoClient.Models
         public string Address { get; set; }
         public string CustomerResourceIdName { get; set; }
         public string ChildResourceIdName { get; set; }
-
     }
 }
